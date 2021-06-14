@@ -3,3 +3,7 @@ pandas
 requests
 flair
 tensorflow
+tweepy
+textblob
+elasticsearch
+configparser
