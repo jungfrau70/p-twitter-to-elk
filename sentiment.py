@@ -1,35 +1,29 @@
 import json
-from tweepy.streaming import StreamListener
-from tweepy import OAuthHandler
-from tweepy import Stream
 from textblob import TextBlob
-from elasticsearch import Elasticsearch
+import elasticsearch
 
-# import twitter keys and tokens
-from configparser import ConfigParser
-
-#Read config.ini file
-config_object = ConfigParser()
-config_object.read("config.ini")
-
-#Get Twitter API keys
-twitter_keyinfo = config_object["TwitterAPI"]
-
-consumer_key = twitter_keyinfo["consumer_key"]
-consumer_secret = twitter_keyinfo["consumer_secret"]
-access_token = twitter_keyinfo["access_token"]
-access_token_secret = twitter_keyinfo["access_token_secret"]
-
-print (consumer_key)
-print (consumer_secret)
-print (access_token)
-print (access_token_secret)
+consumer_key = 'iDmciYm5UDpcqMEww8Hvv5szl'
+consumer_secret = '4MeCYwrwxsIw2vflWSlVQdFC7Luv5VDYatl63Uh6ZNGBYqcLwr'
+access_token = '104431837-mrtdMgvcDnUIEVx2NPdURthIk37m1PBk1rGWUjSU'
+access_token_secret = 'vk9pByLZNBCZ856hBnEvZvFmBGmb7h0PQLxpL74wq1JuC'
 
 # create instance of elasticsearch
-es = Elasticsearch()
+config = {
+    'host': 'localhost'
+}
+es = elasticsearch.Elasticsearch([config, ], timeout=300)
 
+import tweepy
+#override tweepy.StreamListener to add logic to on_status
+class MyStreamListener(tweepy.StreamListener):
 
-class TweetStreamListener(StreamListener):
+    def on_status(self, status):
+        print(status.text)
+
+    def on_error(self, status_code):
+        if status_code == 420:
+            #returning False in on_error disconnects the stream
+            return False
 
     # on success
     def on_data(self, data):
@@ -41,7 +35,7 @@ class TweetStreamListener(StreamListener):
         tweet = TextBlob(dict_data["text"])
 
         # output sentiment polarity
-        print (tweet.sentiment.polarity)
+        print(tweet.sentiment.polarity)
 
         # determine if sentiment is positive, negative, or neutral
         if tweet.sentiment.polarity < 0:
@@ -52,7 +46,7 @@ class TweetStreamListener(StreamListener):
             sentiment = "positive"
 
         # output sentiment
-        print (sentiment)
+        print(sentiment)
 
         # add text and sentiment info to elasticsearch
         es.index(index="sentiment",
@@ -65,21 +59,19 @@ class TweetStreamListener(StreamListener):
                        "sentiment": sentiment})
         return True
 
-    # on failure
-    def on_error(self, status):
-        print (status)
 
 if __name__ == '__main__':
 
-    # create instance of the tweepy tweet stream listener
-    listener = TweetStreamListener()
-
     # set twitter keys/tokens
-    auth = OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = tweepy.AppAuthHandler(consumer_key, consumer_secret)
+    api = tweepy.API(auth)
+
+    #for tweet in tweepy.Cursor(api.search, q='realDonaldTrump').items(10):
+    #    print(tweet.text)
 
     # create instance of the tweepy stream
-    stream = Stream(auth, listener)
+    myStreamListener = MyStreamListener()
+    myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
 
     # search twitter for "congress" keyword
-    stream.filter(track=['congress'])
+    myStream.filter(track=['tesla'])
