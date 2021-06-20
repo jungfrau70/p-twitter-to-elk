@@ -11,6 +11,7 @@ flair
 geopy
 googletransx
 jupyterlab
+nest_asyncio
 pysocks
 pandas>=0.23.0
 python-dotenv
@@ -22,3 +23,4 @@ spacy
 textblob
 tweepy
 twint
+tqdm
