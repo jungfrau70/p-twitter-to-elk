@@ -10,6 +10,7 @@ fake-useragent
 flair
 geopy
 googletransx
+jupyterlab
 pysocks
 pandas>=0.23.0
 python-dotenv
