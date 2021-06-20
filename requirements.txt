@@ -22,5 +22,4 @@ spacy
 #tensorflow
 textblob
 tweepy
-twint
 tqdm
